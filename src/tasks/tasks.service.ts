@@ -1,3 +1,4 @@
+// import { User } from './../auth/user.entity';
 import { User } from 'src/auth/user.entity';
 import {TaskStatus } from './task.status.enum';
 import { Injectable, NotFoundException } from "@nestjs/common";
@@ -34,10 +35,10 @@ export class TasksService {
     return task
   }
 
-  async getTasks(filterDto: GetTasksFilterDto) {
+  async getTasks(filterDto: GetTasksFilterDto, user: User) {
     const { status, search } = filterDto
     const query = this.tasksRepository.createQueryBuilder('task')
-
+    query.where({user})
     if (status) {
       query.andWhere('task.status = :status', {status})
     }
@@ -54,10 +55,11 @@ export class TasksService {
   }
 
 
-  async getTaskById(id: string): Promise<Task> {
+  async getTaskById(id: string, user: User): Promise<Task> {
     const found = await this.tasksRepository.findOne({
       where: {
-        id
+        id,
+        user
       }
     }) 
     if(!found) {
@@ -66,37 +68,10 @@ export class TasksService {
     return found
   }
 
-  // getTaskById(id: string): Task {
 
 
-  //   const found = this.tasks.find((task) => task.id == id)
-  //   if(!found) {
-  //     throw new NotFoundException(`Task with ID "${id}" not found`)
-  //   }
-  //   return found
-  // }
-  // getTasksWithFilters(filterDto: GetTasksFilterDto) {
-  //   const { status, search } = filterDto
-
-  //   let tasks = this.getAllTasks()
-
-  //     if(status) {
-  //       tasks = tasks.filter((task) => task.status == status)
-  //   }
-
-  //   if(search) {
-  //     tasks = tasks.filter((task) => {
-  //       if(task.title.toLowerCase().includes(search) || task.description.includes(search)) {
-  //         return true
-  //       }
-  //       return false
-  //     })
-  //   }
-  //   return tasks
-  // }
-
-  async deleteTask(id: string) {
-    const result = await this.tasksRepository.delete(id)
+  async deleteTask(id: string, user: User) {
+    const result = await this.tasksRepository.delete({id, user})
     // console.log(result);
     if(result.affected === 0){
       throw new NotFoundException(`Task with ID "${id}" not found`)
@@ -105,12 +80,14 @@ export class TasksService {
     return 'Successfuly deleted'
   }
 
- async updateTaskStatus(id: string, status: TaskStatus) {
-    const task = await this.getTaskById(id)
+ async updateTaskStatus(id: string, status: TaskStatus, user: User) {
+    const task = await this.getTaskById(id, user)
     
     task.status = status
     await this.tasksRepository.save(task)
 
     return task
   }
+
+
 }
