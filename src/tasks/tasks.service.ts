@@ -15,6 +15,10 @@ export class TasksService {
     @InjectRepository(Task)
     private readonly tasksRepository: Repository<Task>,
   ) {}
+
+  // onModuleInit() {
+  //   console.log('salom');
+  // }
   // private tasks: Task[] = []
   async getAllTasks()  {
     return this.tasksRepository.find()
